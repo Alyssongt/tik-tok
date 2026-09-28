@@ -182,7 +182,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
+        import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-storage.js";
 
         // Cole aqui a configuracao do app Web em Firebase Console > Configuracoes do projeto.
         const firebaseConfigForWeb = {
@@ -297,19 +297,47 @@
                 return;
             }
 
+            if (!file.type.startsWith('image/')) {
+                showToast("Selecione um arquivo de imagem válido.", "error");
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("A imagem deve ter no máximo 10 MB.", "error");
+                return;
+            }
+
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loader"></span> ENVIANDO DADOS...';
+            submitBtn.innerHTML = '<span class="loader"></span> INICIANDO ENVIO...';
 
             try {
-                // Upload Image to Firebase Storage
                 const storagePath = `artifacts/${appId}/public/data/screenshots/${Date.now()}_${file.name}`;
                 const storageReference = ref(storage, storagePath);
-                
-                await uploadBytes(storageReference, file);
-                const downloadURL = await getDownloadURL(storageReference);
+                const uploadTask = uploadBytesResumable(storageReference, file);
+                const downloadURL = await new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        uploadTask.cancel();
+                        reject(new Error('upload-timeout'));
+                    }, 120000);
 
-                // Save Data to Firestore
+                    uploadTask.on('state_changed', (snapshot) => {
+                        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+                        submitBtn.innerHTML = `<span class="loader"></span> ENVIANDO PRINT ${progress}%`;
+                    }, (error) => {
+                        clearTimeout(timeoutId);
+                        reject(error);
+                    }, async () => {
+                        clearTimeout(timeoutId);
+                        try {
+                            resolve(await getDownloadURL(uploadTask.snapshot.ref));
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                });
+
+                submitBtn.innerHTML = '<span class="loader"></span> SALVANDO SOLICITAÇÃO...';
                 const submissionsRef = collection(db, submissionsCollectionPath);
                 await addDoc(submissionsRef, {
                     nome: nome,
@@ -326,7 +354,14 @@
                 
             } catch (error) {
                 console.error("Erro ao enviar dados:", error);
-                showToast("Ocorreu um erro ao enviar. Tente novamente.", "error");
+                const message = error.message === 'upload-timeout'
+                    ? "O envio da imagem demorou demais e foi cancelado. Verifique sua conexão e tente novamente."
+                    : error.code === 'storage/unauthorized' || error.code === 'permission-denied'
+                        ? "O Firebase bloqueou o envio. Verifique as regras do Storage e do Firestore."
+                        : error.code === 'storage/bucket-not-found'
+                            ? "O bucket do Firebase Storage não foi encontrado. Confira o storageBucket da configuração."
+                            : `Falha ao enviar (${error.code || 'erro de conexão'}). Confira a conexão e as regras do Firebase.`;
+                showToast(message, "error");
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'ENVIAR E AGUARDAR PIX';
