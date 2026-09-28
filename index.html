@@ -310,8 +310,24 @@
             const submitBtn = document.getElementById('submitBtn');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="loader"></span> INICIANDO ENVIO...';
+            let submissionRef = null;
+            let submissionSaved = false;
+            let imageUploaded = false;
 
             try {
+                submitBtn.innerHTML = '<span class="loader"></span> SALVANDO SOLICITAÇÃO...';
+                const submissionsRef = collection(db, submissionsCollectionPath);
+                submissionRef = await addDoc(submissionsRef, {
+                    nome: nome,
+                    pix: pix,
+                    whatsapp: whatsapp,
+                    printUrl: '',
+                    uploadStatus: 'uploading',
+                    status: 'wait',
+                    timestamp: new Date().toISOString()
+                });
+                submissionSaved = true;
+
                 const storagePath = `artifacts/${appId}/public/data/screenshots/${Date.now()}_${file.name}`;
                 const storageReference = ref(storage, storagePath);
                 const uploadTask = uploadBytesResumable(storageReference, file);
@@ -336,16 +352,11 @@
                         }
                     });
                 });
+                imageUploaded = true;
 
-                submitBtn.innerHTML = '<span class="loader"></span> SALVANDO SOLICITAÇÃO...';
-                const submissionsRef = collection(db, submissionsCollectionPath);
-                await addDoc(submissionsRef, {
-                    nome: nome,
-                    pix: pix,
-                    whatsapp: whatsapp,
+                await updateDoc(submissionRef, {
                     printUrl: downloadURL,
-                    status: 'wait',
-                    timestamp: new Date().toISOString()
+                    uploadStatus: 'complete'
                 });
 
                 showToast("Solicitação enviada com sucesso!", "success");
@@ -354,13 +365,24 @@
                 
             } catch (error) {
                 console.error("Erro ao enviar dados:", error);
-                const message = error.message === 'upload-timeout'
-                    ? "O envio da imagem demorou demais e foi cancelado. Verifique sua conexão e tente novamente."
-                    : error.code === 'storage/unauthorized' || error.code === 'permission-denied'
-                        ? "O Firebase bloqueou o envio. Verifique as regras do Storage e do Firestore."
-                        : error.code === 'storage/bucket-not-found'
-                            ? "O bucket do Firebase Storage não foi encontrado. Confira o storageBucket da configuração."
-                            : `Falha ao enviar (${error.code || 'erro de conexão'}). Confira a conexão e as regras do Firebase.`;
+                if (submissionRef) {
+                    try {
+                        await updateDoc(submissionRef, { uploadStatus: 'failed' });
+                    } catch (updateError) {
+                        console.error("Não foi possível atualizar o status do print:", updateError);
+                    }
+                }
+                const message = !submissionSaved
+                    ? `Não foi possível salvar a solicitação (${error.code || 'erro de conexão'}). Verifique as regras do Firestore.`
+                    : imageUploaded
+                        ? "A imagem foi enviada, mas não foi possível atualizar o registro no Firestore. Verifique as regras do banco."
+                        : error.message === 'upload-timeout'
+                            ? "Solicitação salva, mas o print demorou demais. Verifique o Storage e tente novamente."
+                            : error.code === 'storage/unauthorized' || error.code === 'permission-denied'
+                                ? "Solicitação salva, mas o Firebase bloqueou o print. Verifique as regras do Storage."
+                                : error.code === 'storage/bucket-not-found'
+                                    ? "Solicitação salva, mas o bucket do Storage não foi encontrado. Confira o storageBucket."
+                                    : `Solicitação salva, mas houve falha no print (${error.code || 'erro de conexão'}). Confira o Storage.`;
                 showToast(message, "error");
             } finally {
                 submitBtn.disabled = false;
@@ -391,13 +413,16 @@
                     const selectPaid = data.status === 'paid' ? 'selected' : '';
                     const selectFailed = data.status === 'failed' ? 'selected' : '';
                     const safePrintUrl = getSafeHttpUrl(data.printUrl);
+                    const printCell = safePrintUrl
+                        ? `<a href="${safePrintUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-700 underline font-medium text-xs bg-blue-50 px-3 py-1 rounded-full">Ver Print</a>`
+                        : `<span class="text-xs ${data.uploadStatus === 'failed' ? 'text-red-500' : 'text-gray-400'}">${data.uploadStatus === 'failed' ? 'Upload falhou' : 'Enviando...'}</span>`;
 
                     row.innerHTML = `
                         <td class="p-4 text-sm font-medium text-gray-900">${escapeHtml(data.nome)}</td>
                         <td class="p-4 text-sm text-gray-600">${escapeHtml(data.pix)}</td>
                         <td class="p-4 text-sm text-gray-600">${escapeHtml(data.whatsapp)}</td>
                         <td class="p-4 text-sm text-center">
-                            <a href="${safePrintUrl || '#'}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:text-blue-700 underline font-medium text-xs bg-blue-50 px-3 py-1 rounded-full">Ver Print</a>
+                            ${printCell}
                         </td>
                         <td class="p-4">
                             <select onchange="atualizarStatus('${docId}', this.value)" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 outline-none">
