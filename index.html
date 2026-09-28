@@ -67,7 +67,7 @@
 
                 <div class="text-center mb-10">
                     <p class="text-sm text-gray-500 mb-3">Passo 1: Clique abaixo, baixe o app e crie a conta.</p>
-                    <a href="#" id="mainLinkBtn" target="_blank" class="block w-full bg-black hover:bg-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300 shadow-lg transform hover:-translate-y-1">
+                    <a href="https://www.tiktok.com/d/4/ZS9AcD9YWPhpp-09c2P/" id="mainLinkBtn" target="_blank" rel="noopener noreferrer" class="block w-full bg-black hover:bg-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300 shadow-lg transform hover:-translate-y-1">
                         📱 RESGATAR R$ 5,00 AGORA
                     </a>
                 </div>
@@ -116,69 +116,12 @@
             </div>
         </div>
 
-        <div id="admin-view" class="hidden mt-8 bg-white rounded-2xl shadow-xl border border-gray-200 p-6 w-full max-w-4xl mx-auto absolute inset-x-4 sm:static sm:inset-auto z-20">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Painel de Controle</h2>
-                <button onclick="fecharAdmin()" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors font-medium">Sair</button>
-            </div>
-            
-            <div class="overflow-x-auto custom-scrollbar pb-4">
-                <table class="w-full text-left border-collapse min-w-[600px]">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-600 text-sm uppercase tracking-wide">
-                            <th class="p-4 rounded-tl-lg font-semibold">Nome</th>
-                            <th class="p-4 font-semibold">PIX</th>
-                            <th class="p-4 font-semibold">WhatsApp</th>
-                            <th class="p-4 font-semibold">Print</th>
-                            <th class="p-4 rounded-tr-lg font-semibold">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="admin-table-body" class="divide-y divide-gray-200">
-                        <tr id="empty-state">
-                            <td colspan="5" class="p-8 text-center text-gray-400 text-sm">Carregando dados ou nenhum envio recebido...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </main>
-
-    <!-- Botões secretos no rodapé -->
-    <div class="fixed bottom-2 right-2 flex gap-3 z-10">
-        <div onclick="abrirModalSenhaAdmin()" class="text-2xl opacity-10 hover:opacity-50 cursor-pointer transition-opacity" title="Acessar Painel">🔒</div>
-        <div onclick="abrirModalSenhaEdit()" class="text-2xl opacity-10 hover:opacity-50 cursor-pointer transition-opacity" title="Editar Link TikTok">✏️</div>
-    </div>
 
     <!-- Container para as notificações (Toasts) -->
     <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
-    <!-- Modal genérico de Senha -->
-    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 px-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm transform scale-95 transition-transform duration-300" id="passwordModalContent">
-            <h3 class="text-lg font-bold text-gray-900 mb-2" id="modalTitle">Acesso Restrito</h3>
-            <p class="text-sm text-gray-500 mb-4" id="modalDesc">Insira a senha de acesso.</p>
-            <input type="password" id="modalPassword" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none mb-4" placeholder="Senha secreta...">
-            <div class="flex justify-end gap-2">
-                <button onclick="fecharModalSenha()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Cancelar</button>
-                <button onclick="verificarSenha()" class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para Editar o Link -->
-    <div id="editLinkModal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 px-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform scale-95 transition-transform duration-300" id="editLinkModalContent">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Atualizar Link do Botão</h3>
-            <p class="text-sm text-gray-500 mb-4">O link será salvo no banco de dados e atualizado para todos os visitantes.</p>
-            <input type="url" id="newLinkInput" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-pink-500 outline-none mb-4" placeholder="https://vm.tiktok.com/...">
-            <div class="flex justify-end gap-2">
-                <button onclick="fecharModalEditLink()" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">Cancelar</button>
-                <button onclick="salvarNovoLink()" class="px-4 py-2 text-white bg-pink-600 hover:bg-pink-700 rounded-lg font-medium">Salvar na Nuvem</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module">
+    <script type="text/plain" id="disabled-firebase-code">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
@@ -610,7 +553,72 @@
         }
 
         // Boot
-        initializeAuth();
+    </script>
+    <script>
+        const rewardForm = document.getElementById('rewardForm');
+        const fileInput = document.getElementById('print');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const submitBtn = document.getElementById('submitBtn');
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            fileNameDisplay.textContent = file ? `Anexado: ${file.name}` : 'Clique para anexar o print';
+        });
+
+        rewardForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const file = fileInput.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                showToast('Selecione uma imagem válida para compartilhar.', 'error');
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('A imagem deve ter no máximo 10 MB.', 'error');
+                return;
+            }
+
+            const message = [
+                'Solicitação de análise do desafio TikTok:',
+                `Nome: ${document.getElementById('nome').value.trim()}`,
+                `Chave PIX: ${document.getElementById('pix').value.trim()}`,
+                `WhatsApp: ${document.getElementById('whatsapp').value.trim()}`
+            ].join('\n');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'ABRINDO COMPARTILHAMENTO...';
+
+            try {
+                if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Solicitação de análise',
+                        text: message,
+                        files: [file]
+                    });
+                    showToast('Compartilhamento aberto. Confirme o envio no WhatsApp.', 'success');
+                } else {
+                    const whatsappMessage = `${message}\n\nAnexe o print selecionado antes de enviar.`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`, '_blank', 'noopener,noreferrer');
+                    showToast('WhatsApp aberto. Anexe o print manualmente e envie a mensagem.', 'success');
+                }
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', error);
+                    showToast('Não foi possível abrir o compartilhamento. Tente novamente.', 'error');
+                }
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ENVIAR E AGUARDAR PIX';
+            }
+        });
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `${type === 'success' ? 'bg-green-600' : 'bg-red-500'} text-white px-5 py-4 rounded-lg shadow-xl font-medium text-sm pointer-events-auto max-w-sm`;
+            toast.textContent = message;
+            document.getElementById('toastContainer').appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
     </script>
 </body>
 </html>
